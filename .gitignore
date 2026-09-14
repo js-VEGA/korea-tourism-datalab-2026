@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────
+# Personal / submission materials — never publish
+# ─────────────────────────────────────────────────────────────
+/Claude outputs/
+/dist/
+/제출_체크리스트.md
+/제출물_작성가이드.md
+/project_summary.md
+/report/제출서식_최종_붙여넣기용.md
+/report/지자체_발송패키지.md
+/report/서식4_활용사례_제출본.md
+/report/서식4_활용사례_제출본_v4.md
+/report/서식4_활용사례_초안.md
+
+# Competition submission packaging — builds and checks the archive that is
+# attached to the entry form. Not part of the analysis.
+/make_reference_zip.py
+/verify_reference_zip.py
+
+# Working copies of the dev diary.
+# A curated, publication-safe snapshot is committed at docs/devlog/ instead.
+# NOTE: these patterns are anchored with a leading slash on purpose — an
+# unanchored "devlog/" would also match docs/devlog/ and silently drop it.
+/devlog/
+/zip_assets/
+
+# ─────────────────────────────────────────────────────────────
+# Source data — redistribution restricted by the providers' terms.
+# See README "Data" for how to obtain these.
+# ─────────────────────────────────────────────────────────────
+/datalab_raw/
+/processed/
+/population_89regions.csv
+
+# ─────────────────────────────────────────────────────────────
+# Secrets
+# ─────────────────────────────────────────────────────────────
+.env
+.env.*
+*.key
+*.pem
+credentials.json
+
+# ─────────────────────────────────────────────────────────────
+# Build artefacts / scratch
+# ─────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.bak
+_zipstruct*.txt
+regions_sample.csv
+outputs/figures/_diag_local.png
+
+# Superseded model dumps — the per-horizon (h1~h6) and 6-month targets were
+# abandoned in favour of the 12-month target. Only lgbm_g12.txt is kept.
+/outputs/models/lgbm_h*.txt
+/outputs/models/lgbm_g6.txt
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db

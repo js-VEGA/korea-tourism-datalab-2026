@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>인구감소지역 워케이션 잠재력 진단</title>
+<style>
+  :root{
+    color-scheme: light;
+    --plane:#f9f9f7; --surface:#fcfcfb; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+    --grid:#e1e0d9; --axis:#c3c2b7; --border:rgba(11,11,11,.10);
+    --t1:#0d366b; --t1m:#184f95; --t2:#256abf; --t3:#5598e7; --tw:#86b6ef;
+    --accent:#eb6834;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      color-scheme: dark;
+      --plane:#0d0d0d; --surface:#1a1a19; --ink:#fff; --ink2:#c3c2b7; --muted:#898781;
+      --grid:#2c2c2a; --axis:#383835; --border:rgba(255,255,255,.10);
+      --t1:#9ec5f4; --t1m:#6da7ec; --t2:#3987e5; --t3:#256abf; --tw:#184f95;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--plane);color:var(--ink);
+    font:14px/1.55 system-ui,-apple-system,"Segoe UI","Malgun Gothic",sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-size:21px;margin:0 0 4px}
+  .sub{color:var(--ink2);margin:0 0 22px;font-size:13px}
+  .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .tile{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+  .tile .v{font-size:24px;font-weight:650;letter-spacing:-.01em}
+  .tile .k{color:var(--ink2);font-size:12px;margin-top:2px}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:22px}
+  .panel h2{font-size:15px;margin:0 0 2px}
+  .panel .note{color:var(--ink2);font-size:12px;margin:0 0 14px}
+  .validate{border-left:3px solid var(--t2)}
+  .vlist{margin:10px 0 0;padding-left:18px;color:var(--ink2);font-size:12.5px;line-height:1.75}
+  .vlist li{margin-bottom:7px}
+  .vlist li:last-child{margin-bottom:0}
+  .vlist b{color:var(--ink)}
+  .chartbox{overflow-x:auto}
+  svg{display:block;max-width:100%}
+  .dot{cursor:pointer;stroke:var(--surface);stroke-width:1.5}
+  .dot.wk{stroke:var(--accent);stroke-width:2}
+  .dot.sel{stroke:var(--ink);stroke-width:2.5}
+  .qline{stroke:var(--axis);stroke-dasharray:4 4;stroke-width:1}
+  .qlab{fill:var(--muted);font-size:11px}
+  .axis-t{fill:var(--muted);font-size:11px}
+  .axis-title{fill:var(--ink2);font-size:12px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:12px;font-size:12px;color:var(--ink2)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+  .ring{width:12px;height:12px;border-radius:50%;border:2px solid var(--accent);display:inline-block}
+  .controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  select,input[type=search]{font:inherit;padding:6px 9px;border:1px solid var(--border);
+    border-radius:8px;background:var(--surface);color:var(--ink)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:right;padding:7px 9px;border-bottom:1px solid var(--grid);white-space:nowrap;
+    font-variant-numeric:tabular-nums}
+  th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+  th{cursor:pointer;color:var(--ink2);font-weight:600;position:sticky;top:0;background:var(--surface)}
+  th:hover{color:var(--ink)}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:color-mix(in srgb,var(--t2) 8%,transparent)}
+  tbody tr.sel{background:color-mix(in srgb,var(--t2) 16%,transparent)}
+  .pill{display:inline-block;padding:1px 8px;border-radius:20px;font-size:11px;color:#fff;font-weight:600}
+  .tblwrap{overflow:auto;max-height:520px}
+  .detail{font-size:13px;color:var(--ink2);min-height:20px;margin-top:10px}
+  .detail b{color:var(--ink)}
+  .foot{color:var(--muted);font-size:11px;margin-top:26px;line-height:1.7}
+  @media(max-width:720px){.tiles{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>인구감소지역 89곳 · 워케이션 잠재력 진단</h1>
+  <p class="sub">한국관광 데이터랩(체류·방문·소비) + KOSIS(인구·생활인구·연령) · 2022.01~2026.06 · 체류 성숙도 × 성장 모멘텀 2×2 프레임</p>
+
+  <div class="tiles">
+    <div class="tile"><div class="v">89곳</div><div class="k">분석 대상 인구감소지역</div></div>
+    <div class="tile"><div class="v">13곳</div><div class="k">Tier 1 (즉시 투자)</div></div>
+    <div class="tile"><div class="v">0곳</div><div class="k">민간 공유오피스 보유 (인프라 공백)</div></div>
+    <div class="tile"><div class="v">414~1,450억</div><div class="k">Tier 1 투자 시 추가 연 관광소비 (3년차·시나리오 추정)</div></div>
+  </div>
+
+  <div class="panel validate">
+    <h2>외부 검증 — 사전 정보 없이 뽑은 Tier 1에 무엇이 들어왔나</h2>
+    <ul class="vlist">
+      <li><b>강진군</b> — 2025 한국관광 데이터랩 활용 경진대회 <b>대상</b> 수상 지자체(반값여행 정책).
+          수상 사실을 모델에 전혀 넣지 않았음에도 89곳 중 13곳뿐인 <b>Tier 1(즉시 투자)</b>으로 분류됨.</li>
+      <li><b>구성 타당도</b> — 2022년 데이터만으로 산출한 체류 성숙도가, 이후 확인된 워케이션 지정·운영 지역
+          27곳에서 유의하게 높음 (Mann-Whitney 단측 <b>p = 0.046</b>).</li>
+      <li><b>한계</b> — 2024~25 신규 지정 11곳만 놓고 본 예지력 검정은 표본이 작아 유의하지 않음 (초기하 p = 0.29).</li>
+    </ul>
+  </div>
+
+  <div class="panel">
+    <h2>2×2 프레임 — 체류 성숙도 × 성장 모멘텀</h2>
+    <p class="note">가로 = 이미 워케이션형인 정도(체류시간·숙박일수·숙박자비율 z합). 세로 = 예측 12개월 방문자 성장률(%). 점선 = 89곳 중앙값. 주황 테두리 = 워케이션 지정·운영 지역. 점 클릭 시 아래 표와 연동.</p>
+    <div class="chartbox"><svg id="scatter" viewBox="0 0 880 560" role="img" aria-label="체류 성숙도 대비 성장 모멘텀 산점도"></svg></div>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="panel">
+    <h2>지역별 진단표</h2>
+    <p class="note">열 머리글 클릭 = 정렬. 행 클릭 = 위 산점도에서 강조.</p>
+    <div class="controls">
+      <select id="fTier"><option value="">전체 Tier</option></select>
+      <select id="fSido"><option value="">전체 광역</option></select>
+      <input type="search" id="fName" placeholder="지역명 검색">
+    </div>
+    <div class="tblwrap"><table id="tbl">
+      <thead><tr>
+        <th data-k="tier">Tier</th><th data-k="name">지역</th><th data-k="sido">광역</th>
+        <th data-k="score">우선순위</th><th data-k="quad">사분면</th><th data-k="traj">궤적유형</th>
+        <th data-k="mult">생활인구배수</th><th data-k="multr">배수추세</th>
+        <th data-k="youth">청년비중%</th><th data-k="aged">고령화율%</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="detail" id="detail">지역을 선택하면 상세가 표시됩니다.</div>
+  </div>
+
+  <p class="foot">
+    산출: region_features_v3.csv · impact_projection.csv · policy_priority_v2.csv (2026-09) ·
+    우선순위 = z(성장 모멘텀) + z(장기 인구감소율) + z(지수) + z(외지인 숙박관심) + z(생활인구 배수 추세), 0~100 정규화.
+    기대효과는 "생활인구 배수 3년 +0.20~0.35" 가정 하 규모 추정이며 인과 예측이 아님.
+  </p>
+</div>
+
+<script>
+const DATA = {"meta": {"n": 89, "medMat": -0.101, "medMom": 4.18}, "regions": [{"name": "완도군", "sido": "전남광주통합특별시", "tier": "Tier 1 (즉시 투자)", "score": 93.4, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.973, "mom": 6.072, "mult": 4.28, "multr": 0.097, "youth": 12.1, "aged": 39.7, "wk": true, "dsobi": 54.0}, {"name": "울진군", "sido": "경상북도", "tier": "Tier 1- (즉시, 인구감소 완만)", "score": 75.0, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.628, "mom": 5.595, "mult": 5.93, "multr": 0.09, "youth": 16.5, "aged": 34.5, "wk": false, "dsobi": null}, {"name": "고흥군", "sido": "전남광주통합특별시", "tier": "Tier 1 (즉시 투자)", "score": 72.9, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.752, "mom": 4.729, "mult": 4.29, "multr": 0.056, "youth": 10.1, "aged": 48.2, "wk": true, "dsobi": 77.0}, {"name": "안동시", "sido": "경상북도", "tier": "Tier 1- (즉시, 인구감소 완만)", "score": 69.4, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.475, "mom": 5.297, "mult": 3.64, "multr": 0.05, "youth": 19.0, "aged": 30.7, "wk": true, "dsobi": null}, {"name": "영주시", "sido": "경상북도", "tier": "Tier 1 (즉시 투자)", "score": 68.3, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.562, "mom": 4.659, "mult": 3.03, "multr": 0.033, "youth": 15.5, "aged": 34.5, "wk": false, "dsobi": 208.0}, {"name": "영양군", "sido": "경상북도", "tier": "Tier 1- (즉시, 인구감소 완만)", "score": 60.7, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.687, "mom": 4.189, "mult": 3.85, "multr": 0.11, "youth": 11.5, "aged": 44.0, "wk": false, "dsobi": null}, {"name": "거창군", "sido": "경상남도", "tier": "Tier 1- (즉시, 인구감소 완만)", "score": 66.6, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": 0.277, "mom": 5.545, "mult": 3.85, "multr": 0.045, "youth": 14.8, "aged": 34.6, "wk": true, "dsobi": null}, {"name": "옹진군", "sido": "인천광역시", "tier": "Tier 1- (즉시, 인구감소 완만)", "score": 63.4, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": 0.316, "mom": 5.36, "mult": 11.79, "multr": -0.494, "youth": 18.7, "aged": 37.6, "wk": true, "dsobi": null}, {"name": "청양군", "sido": "충청남도", "tier": "Tier 1- (즉시, 인구감소 완만)", "score": 52.6, "quad": "가속 워케이션형", "traj": "체류 강화형(체류유지·숙박심화)", "mat": 0.441, "mom": 4.556, "mult": 4.98, "multr": -0.144, "youth": 13.1, "aged": 43.1, "wk": false, "dsobi": null}, {"name": "해남군", "sido": "전남광주통합특별시", "tier": "Tier 1 (즉시 투자)", "score": 75.4, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.388, "mom": 4.695, "mult": 4.43, "multr": 0.159, "youth": 13.0, "aged": 39.7, "wk": true, "dsobi": 106.0}, {"name": "영암군", "sido": "전남광주통합특별시", "tier": "Tier 1 (즉시 투자)", "score": 71.2, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.125, "mom": 5.263, "mult": 5.23, "multr": 0.008, "youth": 15.2, "aged": 32.8, "wk": false, "dsobi": 136.0}, {"name": "정읍시", "sido": "전북특별자치도", "tier": "Tier 1 (즉시 투자)", "score": 67.3, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.142, "mom": 4.816, "mult": 3.6, "multr": 0.139, "youth": 15.8, "aged": 34.0, "wk": false, "dsobi": 218.0}, {"name": "영동군", "sido": "충청북도", "tier": "Tier 1 (즉시 투자)", "score": 68.1, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": 0.081, "mom": 4.957, "mult": 4.35, "multr": -0.054, "youth": 12.7, "aged": 41.3, "wk": false, "dsobi": 81.0}, {"name": "강진군", "sido": "전남광주통합특별시", "tier": "Tier 1 (즉시 투자)", "score": 62.5, "quad": "가속 워케이션형", "traj": "동반 정체·하락형", "mat": -0.002, "mom": 4.804, "mult": 5.31, "multr": -0.162, "youth": 13.3, "aged": 41.3, "wk": false, "dsobi": 43.0}, {"name": "서구", "sido": "부산광역시", "tier": "Tier 1 (즉시 투자)", "score": 68.2, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": -0.086, "mom": 5.08, "mult": 4.66, "multr": -0.043, "youth": 20.3, "aged": 31.9, "wk": true, "dsobi": 147.0}, {"name": "부여군", "sido": "충청남도", "tier": "Tier 1 (즉시 투자)", "score": 75.6, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": -0.032, "mom": 4.783, "mult": 4.88, "multr": 0.125, "youth": 11.8, "aged": 44.3, "wk": false, "dsobi": 190.0}, {"name": "영월군", "sido": "강원특별자치도", "tier": "Tier 1 (즉시 투자)", "score": 69.4, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": 0.045, "mom": 4.461, "mult": 6.14, "multr": 0.141, "youth": 12.5, "aged": 39.4, "wk": true, "dsobi": 73.0}, {"name": "합천군", "sido": "경상남도", "tier": "Tier 1 (즉시 투자)", "score": 64.5, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": 0.022, "mom": 4.5, "mult": 5.99, "multr": -0.246, "youth": 9.4, "aged": 48.7, "wk": false, "dsobi": 39.0}, {"name": "서천군", "sido": "충청남도", "tier": "Tier 1 (즉시 투자)", "score": 59.9, "quad": "가속 워케이션형", "traj": "숙박 전환 진행형", "mat": -0.055, "mom": 4.572, "mult": 5.64, "multr": -0.288, "youth": 11.6, "aged": 44.8, "wk": true, "dsobi": 79.0}, {"name": "보은군", "sido": "충청북도", "tier": "Tier 2 (선제 육성)", "score": 87.7, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.429, "mom": 8.563, "mult": 6.66, "multr": 0.068, "youth": 11.9, "aged": 43.4, "wk": false, "dsobi": null}, {"name": "함양군", "sido": "경상남도", "tier": "Tier 2 (선제 육성)", "score": 100.0, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.813, "mom": 9.576, "mult": 4.85, "multr": -0.157, "youth": 11.1, "aged": 42.3, "wk": true, "dsobi": null}, {"name": "서구", "sido": "대구광역시", "tier": "Tier 2 (선제 육성)", "score": 71.3, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.187, "mom": 6.932, "mult": 3.43, "multr": -0.067, "youth": 20.7, "aged": 29.8, "wk": false, "dsobi": null}, {"name": "화순군", "sido": "전남광주통합특별시", "tier": "Tier 2 (선제 육성)", "score": 66.1, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.19, "mom": 6.207, "mult": 5.62, "multr": -0.06, "youth": 17.0, "aged": 33.1, "wk": false, "dsobi": null}, {"name": "함안군", "sido": "경상남도", "tier": "Tier 2 (선제 육성)", "score": 77.5, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.153, "mom": 5.825, "mult": 4.78, "multr": 0.03, "youth": 12.7, "aged": 34.8, "wk": false, "dsobi": null}, {"name": "장성군", "sido": "전남광주통합특별시", "tier": "Tier 2 (선제 육성)", "score": 60.2, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.157, "mom": 5.785, "mult": 6.21, "multr": -0.027, "youth": 15.7, "aged": 35.8, "wk": false, "dsobi": null}, {"name": "예산군", "sido": "충청남도", "tier": "Tier 2 (선제 육성)", "score": 55.6, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.247, "mom": 5.97, "mult": 5.48, "multr": -0.213, "youth": 15.1, "aged": 37.4, "wk": true, "dsobi": null}, {"name": "밀양시", "sido": "경상남도", "tier": "Tier 2 (선제 육성)", "score": 66.6, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.149, "mom": 5.553, "mult": 4.94, "multr": 0.001, "youth": 14.0, "aged": 37.6, "wk": false, "dsobi": null}, {"name": "김제시", "sido": "전북특별자치도", "tier": "Tier 2 (선제 육성)", "score": 54.5, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.219, "mom": 5.78, "mult": 4.08, "multr": -0.025, "youth": 16.0, "aged": 36.8, "wk": false, "dsobi": null}, {"name": "옥천군", "sido": "충청북도", "tier": "Tier 2 (선제 육성)", "score": 56.6, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.609, "mom": 7.108, "mult": 4.94, "multr": -0.262, "youth": 14.4, "aged": 37.4, "wk": false, "dsobi": null}, {"name": "문경시", "sido": "경상북도", "tier": "Tier 2 (선제 육성)", "score": 83.7, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.602, "mom": 6.793, "mult": 5.18, "multr": 0.128, "youth": 13.3, "aged": 39.0, "wk": false, "dsobi": null}, {"name": "고창군", "sido": "전북특별자치도", "tier": "Tier 2 (선제 육성)", "score": 66.3, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.12, "mom": 4.998, "mult": 5.86, "multr": 0.034, "youth": 12.2, "aged": 41.7, "wk": true, "dsobi": null}, {"name": "영천시", "sido": "경상북도", "tier": "Tier 2 (선제 육성)", "score": 67.8, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.34, "mom": 5.585, "mult": 4.15, "multr": 0.026, "youth": 14.4, "aged": 36.8, "wk": false, "dsobi": null}, {"name": "창녕군", "sido": "경상남도", "tier": "Tier 2 (선제 육성)", "score": 75.1, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.236, "mom": 5.113, "mult": 5.23, "multr": -0.077, "youth": 11.2, "aged": 41.2, "wk": false, "dsobi": null}, {"name": "동구", "sido": "부산광역시", "tier": "Tier 2 (선제 육성)", "score": 87.8, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.842, "mom": 7.179, "mult": 7.97, "multr": 0.614, "youth": 22.0, "aged": 31.9, "wk": true, "dsobi": null}, {"name": "의령군", "sido": "경상남도", "tier": "Tier 2 (선제 육성)", "score": 55.6, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.152, "mom": 4.286, "mult": 5.58, "multr": -0.118, "youth": 10.6, "aged": 45.7, "wk": false, "dsobi": null}, {"name": "상주시", "sido": "경상북도", "tier": "Tier 2 (선제 육성)", "score": 64.8, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.328, "mom": 4.751, "mult": 4.04, "multr": 0.087, "youth": 13.0, "aged": 39.5, "wk": true, "dsobi": null}, {"name": "영덕군", "sido": "경상북도", "tier": "Tier 2 (선제 육성)", "score": 68.0, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.272, "mom": 4.34, "mult": 8.98, "multr": 0.098, "youth": 10.2, "aged": 45.9, "wk": false, "dsobi": null}, {"name": "부안군", "sido": "전북특별자치도", "tier": "Tier 2 (선제 육성)", "score": 63.8, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.334, "mom": 4.494, "mult": 7.07, "multr": -0.156, "youth": 12.5, "aged": 41.0, "wk": true, "dsobi": null}, {"name": "진안군", "sido": "전북특별자치도", "tier": "Tier 2 (선제 육성)", "score": 48.2, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.494, "mom": 5.0, "mult": 6.75, "multr": -0.121, "youth": 12.0, "aged": 42.6, "wk": true, "dsobi": null}, {"name": "순창군", "sido": "전북특별자치도", "tier": "Tier 2 (선제 육성)", "score": 38.8, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.273, "mom": 4.18, "mult": 5.65, "multr": -0.132, "youth": 13.3, "aged": 39.3, "wk": false, "dsobi": null}, {"name": "공주시", "sido": "충청남도", "tier": "Tier 2 (선제 육성)", "score": 54.6, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.447, "mom": 4.438, "mult": 6.41, "multr": 0.183, "youth": 18.0, "aged": 34.1, "wk": false, "dsobi": null}, {"name": "성주군", "sido": "경상북도", "tier": "Tier 2 (선제 육성)", "score": 57.6, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.508, "mom": 4.478, "mult": 5.33, "multr": -0.106, "youth": 11.3, "aged": 42.6, "wk": false, "dsobi": null}, {"name": "고령군", "sido": "경상북도", "tier": "Tier 2 (선제 육성)", "score": 47.1, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.518, "mom": 4.187, "mult": 5.67, "multr": -0.084, "youth": 11.9, "aged": 41.2, "wk": false, "dsobi": null}, {"name": "홍천군", "sido": "강원특별자치도", "tier": "Tier 2 (선제 육성)", "score": 59.0, "quad": "떠오르는 잠재지", "traj": "숙박 전환 진행형", "mat": -0.744, "mom": 4.881, "mult": 8.7, "multr": -0.114, "youth": 15.3, "aged": 37.0, "wk": false, "dsobi": null}, {"name": "임실군", "sido": "전북특별자치도", "tier": "Tier 2 (선제 육성)", "score": 54.9, "quad": "떠오르는 잠재지", "traj": "동반 정체·하락형", "mat": -0.71, "mom": 4.663, "mult": 7.38, "multr": 0.107, "youth": 12.1, "aged": 44.2, "wk": false, "dsobi": null}, {"name": "양구군", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 70.9, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 1.004, "mom": 3.824, "mult": 4.44, "multr": 0.034, "youth": 21.0, "aged": 28.9, "wk": false, "dsobi": null}, {"name": "논산시", "sido": "충청남도", "tier": "Tier 3 (유지·재활성화)", "score": 69.3, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": 0.824, "mom": 4.106, "mult": 4.47, "multr": 0.022, "youth": 16.2, "aged": 34.5, "wk": false, "dsobi": null}, {"name": "진도군", "sido": "전남광주통합특별시", "tier": "Tier 3 (유지·재활성화)", "score": 70.6, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": 0.781, "mom": 3.547, "mult": 5.2, "multr": -0.166, "youth": 12.9, "aged": 40.4, "wk": false, "dsobi": null}, {"name": "영광군", "sido": "전남광주통합특별시", "tier": "Tier 3 (유지·재활성화)", "score": 39.5, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.485, "mom": 4.149, "mult": 4.23, "multr": -0.251, "youth": 17.7, "aged": 32.8, "wk": false, "dsobi": null}, {"name": "남해군", "sido": "경상남도", "tier": "Tier 3 (유지·재활성화)", "score": 59.3, "quad": "성숙·정체", "traj": "숙박 전환 진행형", "mat": 0.469, "mom": 4.088, "mult": 7.31, "multr": -0.098, "youth": 11.0, "aged": 44.2, "wk": true, "dsobi": null}, {"name": "신안군", "sido": "전남광주통합특별시", "tier": "Tier 3 (유지·재활성화)", "score": 4.8, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": 0.94, "mom": 1.862, "mult": 4.97, "multr": -0.656, "youth": 12.7, "aged": 39.0, "wk": false, "dsobi": null}, {"name": "제천시", "sido": "충청북도", "tier": "Tier 3 (유지·재활성화)", "score": 55.3, "quad": "성숙·정체", "traj": "숙박 전환 진행형", "mat": 0.388, "mom": 3.727, "mult": 4.14, "multr": -0.083, "youth": 18.7, "aged": 29.9, "wk": false, "dsobi": null}, {"name": "울릉군", "sido": "경상북도", "tier": "Tier 3 (유지·재활성화)", "score": 6.9, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 1.8, "mom": -1.509, "mult": 4.88, "multr": -0.689, "youth": 16.1, "aged": 33.1, "wk": false, "dsobi": null}, {"name": "태안군", "sido": "충청남도", "tier": "Tier 3 (유지·재활성화)", "score": 42.3, "quad": "성숙·정체", "traj": "숙박 전환 진행형", "mat": 0.302, "mom": 3.61, "mult": 8.89, "multr": -0.777, "youth": 12.9, "aged": 40.7, "wk": true, "dsobi": null}, {"name": "태백시", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 69.7, "quad": "성숙·정체", "traj": "급속 약화형", "mat": 0.172, "mom": 3.508, "mult": 4.28, "multr": -0.065, "youth": 14.3, "aged": 33.7, "wk": true, "dsobi": null}, {"name": "정선군", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 46.1, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.537, "mom": 2.02, "mult": 9.84, "multr": -0.242, "youth": 13.3, "aged": 36.9, "wk": true, "dsobi": null}, {"name": "강화군", "sido": "인천광역시", "tier": "Tier 3 (유지·재활성화)", "score": 28.3, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": 0.082, "mom": 3.527, "mult": 8.28, "multr": -0.505, "youth": 12.8, "aged": 41.9, "wk": false, "dsobi": null}, {"name": "금산군", "sido": "충청남도", "tier": "Tier 3 (유지·재활성화)", "score": 48.7, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": -0.036, "mom": 3.854, "mult": 5.47, "multr": -0.071, "youth": 12.3, "aged": 39.3, "wk": false, "dsobi": null}, {"name": "고성군", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 45.4, "quad": "성숙·정체", "traj": "숙박 전환 진행형", "mat": 0.193, "mom": 3.014, "mult": 14.58, "multr": 0.147, "youth": 17.0, "aged": 35.9, "wk": true, "dsobi": null}, {"name": "삼척시", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 52.0, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.221, "mom": 2.889, "mult": 5.88, "multr": -0.182, "youth": 17.2, "aged": 33.1, "wk": true, "dsobi": null}, {"name": "장흥군", "sido": "전남광주통합특별시", "tier": "Tier 3 (유지·재활성화)", "score": 53.5, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.181, "mom": 2.874, "mult": 4.5, "multr": -0.025, "youth": 12.9, "aged": 41.1, "wk": false, "dsobi": null}, {"name": "장수군", "sido": "전북특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 38.4, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.261, "mom": 2.51, "mult": 4.62, "multr": -0.132, "youth": 12.5, "aged": 41.4, "wk": false, "dsobi": null}, {"name": "남구", "sido": "대구광역시", "tier": "Tier 3 (유지·재활성화)", "score": 42.7, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": -0.084, "mom": 3.715, "mult": 4.36, "multr": -0.086, "youth": 24.6, "aged": 28.4, "wk": false, "dsobi": null}, {"name": "봉화군", "sido": "경상북도", "tier": "Tier 3 (유지·재활성화)", "score": 54.0, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.106, "mom": 2.916, "mult": 4.53, "multr": -0.012, "youth": 9.2, "aged": 46.7, "wk": false, "dsobi": null}, {"name": "보령시", "sido": "충청남도", "tier": "Tier 3 (유지·재활성화)", "score": 45.7, "quad": "성숙·정체", "traj": "숙박 전환 진행형", "mat": 0.466, "mom": 1.562, "mult": 6.43, "multr": -0.081, "youth": 15.4, "aged": 34.4, "wk": false, "dsobi": null}, {"name": "연천군", "sido": "경기도", "tier": "Tier 3 (유지·재활성화)", "score": 25.3, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": 0.295, "mom": 2.178, "mult": 5.98, "multr": -0.48, "youth": 20.0, "aged": 34.4, "wk": false, "dsobi": null}, {"name": "영도구", "sido": "부산광역시", "tier": "Tier 3 (유지·재활성화)", "score": 57.4, "quad": "성숙·정체", "traj": "체류 강화형(체류유지·숙박심화)", "mat": -0.027, "mom": 3.292, "mult": 4.17, "multr": -0.023, "youth": 17.2, "aged": 36.0, "wk": true, "dsobi": null}, {"name": "의성군", "sido": "경상북도", "tier": "Tier 3 (유지·재활성화)", "score": 47.9, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": -0.101, "mom": 3.272, "mult": 4.2, "multr": -0.001, "youth": 9.3, "aged": 50.1, "wk": false, "dsobi": null}, {"name": "철원군", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 33.0, "quad": "성숙·정체", "traj": "동반 정체·하락형", "mat": 0.543, "mom": 0.509, "mult": 5.77, "multr": -0.283, "youth": 20.3, "aged": 30.8, "wk": false, "dsobi": null}, {"name": "평창군", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 24.0, "quad": "성숙·정체", "traj": "숙박 전환 진행형", "mat": 0.307, "mom": 1.057, "mult": 12.95, "multr": -0.649, "youth": 12.9, "aged": 38.5, "wk": false, "dsobi": null}, {"name": "화천군", "sido": "강원특별자치도", "tier": "Tier 3 (유지·재활성화)", "score": 34.0, "quad": "성숙·정체", "traj": "급속 약화형", "mat": 0.064, "mom": 0.931, "mult": 5.77, "multr": -0.164, "youth": 23.2, "aged": 30.8, "wk": false, "dsobi": null}, {"name": "남원시", "sido": "전북특별자치도", "tier": "관찰", "score": 59.0, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.146, "mom": 4.022, "mult": 4.46, "multr": -0.076, "youth": 14.5, "aged": 35.4, "wk": false, "dsobi": null}, {"name": "구례군", "sido": "전남광주통합특별시", "tier": "관찰", "score": 41.6, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.314, "mom": 3.741, "mult": 8.46, "multr": -0.283, "youth": 11.7, "aged": 41.7, "wk": true, "dsobi": null}, {"name": "함평군", "sido": "전남광주통합특별시", "tier": "관찰", "score": 45.0, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.308, "mom": 3.497, "mult": 6.0, "multr": -0.134, "youth": 12.3, "aged": 43.0, "wk": false, "dsobi": null}, {"name": "보성군", "sido": "전남광주통합특별시", "tier": "관찰", "score": 48.7, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.363, "mom": 3.686, "mult": 5.76, "multr": -0.089, "youth": 11.4, "aged": 44.9, "wk": false, "dsobi": null}, {"name": "하동군", "sido": "경상남도", "tier": "관찰", "score": 45.3, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.172, "mom": 2.933, "mult": 5.83, "multr": -0.48, "youth": 10.2, "aged": 44.8, "wk": true, "dsobi": null}, {"name": "곡성군", "sido": "전남광주통합특별시", "tier": "관찰", "score": 21.0, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.176, "mom": 2.93, "mult": 6.31, "multr": -0.559, "youth": 13.1, "aged": 41.9, "wk": true, "dsobi": null}, {"name": "고성군", "sido": "경상남도", "tier": "관찰", "score": 50.3, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.312, "mom": 3.325, "mult": 5.48, "multr": -0.131, "youth": 10.8, "aged": 40.5, "wk": false, "dsobi": null}, {"name": "양양군", "sido": "강원특별자치도", "tier": "관찰", "score": 31.9, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.133, "mom": 2.273, "mult": 15.54, "multr": -0.312, "youth": 14.0, "aged": 37.7, "wk": true, "dsobi": null}, {"name": "산청군", "sido": "경상남도", "tier": "관찰", "score": 33.3, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.388, "mom": 3.104, "mult": 6.9, "multr": -0.604, "youth": 9.7, "aged": 46.1, "wk": false, "dsobi": null}, {"name": "청송군", "sido": "경상북도", "tier": "관찰", "score": 41.3, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.105, "mom": 1.998, "mult": 5.94, "multr": 0.177, "youth": 11.7, "aged": 45.1, "wk": false, "dsobi": null}, {"name": "횡성군", "sido": "강원특별자치도", "tier": "관찰", "score": 32.1, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.303, "mom": 2.542, "mult": 7.49, "multr": -0.142, "youth": 12.1, "aged": 40.5, "wk": false, "dsobi": null}, {"name": "담양군", "sido": "전남광주통합특별시", "tier": "관찰", "score": 38.2, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.851, "mom": 3.266, "mult": 8.84, "multr": 0.031, "youth": 14.1, "aged": 38.4, "wk": false, "dsobi": null}, {"name": "단양군", "sido": "충청북도", "tier": "관찰", "score": 26.3, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.357, "mom": 1.468, "mult": 9.47, "multr": -0.582, "youth": 11.6, "aged": 42.4, "wk": false, "dsobi": null}, {"name": "군위군", "sido": "대구광역시", "tier": "관찰", "score": 22.0, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.898, "mom": 2.859, "mult": 8.63, "multr": -0.313, "youth": 9.1, "aged": 49.9, "wk": false, "dsobi": null}, {"name": "괴산군", "sido": "충청북도", "tier": "관찰", "score": 21.1, "quad": "저잠재", "traj": "급속 약화형", "mat": -0.722, "mom": 1.984, "mult": 7.7, "multr": -0.304, "youth": 11.2, "aged": 43.9, "wk": false, "dsobi": null}, {"name": "가평군", "sido": "경기도", "tier": "관찰", "score": 0.0, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.443, "mom": 0.94, "mult": 13.2, "multr": -0.992, "youth": 16.9, "aged": 34.8, "wk": false, "dsobi": null}, {"name": "청도군", "sido": "경상북도", "tier": "관찰", "score": 20.6, "quad": "저잠재", "traj": "동반 정체·하락형", "mat": -0.757, "mom": 1.525, "mult": 8.51, "multr": -0.222, "youth": 9.3, "aged": 47.6, "wk": false, "dsobi": null}, {"name": "무주군", "sido": "전북특별자치도", "tier": "관찰", "score": 17.6, "quad": "저잠재", "traj": "숙박 전환 진행형", "mat": -0.44, "mom": 0.368, "mult": 10.47, "multr": -0.238, "youth": 13.0, "aged": 40.1, "wk": false, "dsobi": null}]};
+const R = DATA.regions, M = DATA.meta;
+const TIERS = ["Tier 1 (즉시 투자)","Tier 1- (즉시, 인구감소 완만)","Tier 2 (선제 육성)","Tier 3 (유지·재활성화)","관찰"];
+const TCOL = {["Tier 1 (즉시 투자)"]:"var(--t1)",["Tier 1- (즉시, 인구감소 완만)"]:"var(--t1m)",
+  ["Tier 2 (선제 육성)"]:"var(--t2)",["Tier 3 (유지·재활성화)"]:"var(--t3)",["관찰"]:"var(--tw)"};
+const TSHORT = {["Tier 1 (즉시 투자)"]:"Tier 1",["Tier 1- (즉시, 인구감소 완만)"]:"Tier 1-",
+  ["Tier 2 (선제 육성)"]:"Tier 2",["Tier 3 (유지·재활성화)"]:"Tier 3",["관찰"]:"관찰"};
+let sel = null;
+
+/* ---------- scatter ---------- */
+const SV = document.getElementById("scatter");
+const NS = "http://www.w3.org/2000/svg";
+const mL=64,mR=20,mT=18,mB=48, W=880,H=560, pw=W-mL-mR, ph=H-mT-mB;
+const xd=[-1.0,1.9], yd=[-2.6,10.6];
+const sx=v=>mL+(v-xd[0])/(xd[1]-xd[0])*pw;
+const sy=v=>mT+ph-(v-yd[0])/(yd[1]-yd[0])*ph;
+function el(t,a){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;}
+
+function drawScatter(){
+  SV.textContent="";
+  // grid + ticks
+  for(let gx=-1;gx<=1.9;gx+=0.5){
+    SV.append(el("line",{x1:sx(gx),y1:mT,x2:sx(gx),y2:mT+ph,stroke:"var(--grid)","stroke-width":1}));
+    SV.append(Object.assign(el("text",{x:sx(gx),y:mT+ph+18,"text-anchor":"middle",class:"axis-t"}),{textContent:gx.toFixed(1)}));
+  }
+  for(let gy=-2;gy<=10;gy+=2){
+    SV.append(el("line",{x1:mL,y1:sy(gy),x2:mL+pw,y2:sy(gy),stroke:"var(--grid)","stroke-width":1}));
+    SV.append(Object.assign(el("text",{x:mL-10,y:sy(gy)+4,"text-anchor":"end",class:"axis-t"}),{textContent:gy}));
+  }
+  // quadrant medians
+  SV.append(el("line",{x1:sx(M.medMat),y1:mT,x2:sx(M.medMat),y2:mT+ph,class:"qline"}));
+  SV.append(el("line",{x1:mL,y1:sy(M.medMom),x2:mL+pw,y2:sy(M.medMom),class:"qline"}));
+  SV.append(Object.assign(el("text",{x:mL+pw-6,y:mT+14,"text-anchor":"end",class:"qlab"}),{textContent:"가속 워케이션형 →"}));
+  SV.append(Object.assign(el("text",{x:mL+6,y:mT+14,class:"qlab"}),{textContent:"← 떠오르는 잠재지"}));
+  SV.append(Object.assign(el("text",{x:mL+pw-6,y:mT+ph-6,"text-anchor":"end",class:"qlab"}),{textContent:"성숙·정체 →"}));
+  SV.append(Object.assign(el("text",{x:mL+6,y:mT+ph-6,class:"qlab"}),{textContent:"← 저잠재"}));
+  // axis titles
+  SV.append(Object.assign(el("text",{x:mL+pw/2,y:H-8,"text-anchor":"middle",class:"axis-title"}),{textContent:"체류 성숙도 (z 합)"}));
+  const yt=el("text",{x:16,y:mT+ph/2,"text-anchor":"middle",class:"axis-title",transform:`rotate(-90 16 ${mT+ph/2})`});
+  yt.textContent="성장 모멘텀 — 예측 12개월 방문자 성장률 (%)"; SV.append(yt);
+  // dots (draw 관찰→Tier1 so priority sits on top)
+  [...R].sort((a,b)=>TIERS.indexOf(b.tier)-TIERS.indexOf(a.tier)).forEach(d=>{
+    const c=el("circle",{cx:sx(d.mat),cy:sy(d.mom),r:6,fill:TCOL[d.tier],
+      class:"dot"+(d.wk?" wk":"")+(sel===d.name?" sel":""),"data-n":d.name});
+    c.append(el("title",{}));c.querySelector("title").textContent=
+      `${d.name} (${d.sido}) · ${TSHORT[d.tier]}\n체류성숙도 ${d.mat} · 성장모멘텀 ${d.mom}%\n생활인구배수 ${d.mult}배(추세 ${d.multr>=0?"+":""}${d.multr}) · 우선순위 ${d.score}`;
+    c.addEventListener("click",()=>pick(d.name));
+    SV.append(c);
+  });
+}
+
+/* ---------- legend ---------- */
+const LG=document.getElementById("legend");
+TIERS.forEach(t=>{const s=document.createElement("span");
+  s.innerHTML=`<i class="sw" style="background:${TCOL[t]}"></i>${TSHORT[t]}`;LG.append(s);});
+const wkS=document.createElement("span");wkS.innerHTML=`<i class="ring"></i>워케이션 지정·운영 지역`;LG.append(wkS);
+
+/* ---------- table ---------- */
+const TB=document.querySelector("#tbl tbody");
+const fTier=document.getElementById("fTier"),fSido=document.getElementById("fSido"),fName=document.getElementById("fName");
+TIERS.forEach(t=>fTier.append(new Option(TSHORT[t],t)));
+[...new Set(R.map(d=>d.sido))].sort().forEach(s=>fSido.append(new Option(s,s)));
+let sortK="score",sortAsc=false;
+
+function rows(){
+  let x=R.filter(d=>(!fTier.value||d.tier===fTier.value)&&(!fSido.value||d.sido===fSido.value)
+    &&(!fName.value||d.name.includes(fName.value)));
+  x.sort((a,b)=>{let u=a[sortK],v=b[sortK];
+    if(typeof u==="string")return sortAsc?u.localeCompare(v):v.localeCompare(u);
+    return sortAsc?u-v:v-u;});
+  return x;
+}
+function renderTable(){
+  TB.textContent="";
+  rows().forEach(d=>{
+    const tr=document.createElement("tr");tr.className=sel===d.name?"sel":"";
+    tr.dataset.n=d.name;
+    tr.innerHTML=`<td><span class="pill" style="background:${TCOL[d.tier]}">${TSHORT[d.tier]}</span></td>
+      <td>${d.name}</td><td>${d.sido}</td><td>${d.score.toFixed(1)}</td>
+      <td style="text-align:left">${d.quad}</td><td style="text-align:left">${d.traj.replace(/\(.*\)/,"")}</td>
+      <td>${d.mult.toFixed(2)}</td><td>${d.multr>=0?"+":""}${d.multr.toFixed(2)}</td>
+      <td>${d.youth.toFixed(1)}</td><td>${d.aged.toFixed(1)}</td>`;
+    tr.addEventListener("click",()=>pick(d.name));
+    TB.append(tr);
+  });
+}
+document.querySelectorAll("#tbl th").forEach(th=>th.addEventListener("click",()=>{
+  const k=th.dataset.k;if(sortK===k)sortAsc=!sortAsc;else{sortK=k;sortAsc=(k==="name"||k==="sido");}
+  renderTable();
+}));
+[fTier,fSido].forEach(s=>s.addEventListener("change",renderTable));
+fName.addEventListener("input",renderTable);
+
+/* ---------- selection ---------- */
+function pick(name){
+  sel=(sel===name)?null:name;
+  drawScatter();renderTable();
+  const d=R.find(x=>x.name===name);
+  const det=document.getElementById("detail");
+  if(!sel||!d){det.textContent="지역을 선택하면 상세가 표시됩니다.";return;}
+  const eff=d.dsobi!=null?` · 중심 시나리오 추가 연 관광소비 <b>+${d.dsobi.toFixed(0)}억원</b>`:"";
+  det.innerHTML=`<b>${d.name}</b> (${d.sido}) · <b>${TSHORT[d.tier]}</b> · ${d.quad} · ${d.traj}<br>
+    체류 성숙도 <b>${d.mat}</b> · 성장 모멘텀 <b>${d.mom}%</b> · 생활인구 배수 <b>${d.mult}배</b>(추세 ${d.multr>=0?"+":""}${d.multr}/년) ·
+    청년비중 ${d.youth}% · 고령화율 ${d.aged}% · 우선순위 <b>${d.score.toFixed(1)}</b>${eff}
+    ${d.wk?" · <b>워케이션 지정·운영 지역</b>":""}`;
+}
+
+drawScatter();renderTable();
+</script>
+</body>
+</html>
