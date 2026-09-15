@@ -103,18 +103,20 @@ Both are theme-aware (light/dark) and were render-verified in headless Chrome �
 ## Repository layout
 
 ```
-├── *.py                      analysis pipeline (numbered in execution order)
-├── viz_style.py              shared plotting design system
-├── report/                   dashboards (self-contained HTML) + Tier 1 action scenarios
+├── src/            analysis pipeline (numbered in execution order),
+│                   plus viz_style.py, the shared plotting design system
+├── report/         dashboards (self-contained HTML) + Tier 1 action scenarios
 ├── outputs/
-│   ├── tables/               every number in the write-up traces back to here
-│   └── figures/              submission figures (sub_*) + intermediate round figures
+│   ├── tables/     every number in the write-up traces back to here
+│   └── figures/    submission figures (sub_*) + intermediate round figures
 └── docs/
     ├── submission_writeup_ko.md    the competition write-up (Korean)
     └── devlog/                     development diary — 19 entries, in order
 ```
 
 ### Pipeline order
+
+All scripts live in `src/`.
 
 ```
 collect    download_datalab.py · fetch_living_population.py · fetch_age_population.py

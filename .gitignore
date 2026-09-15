@@ -14,8 +14,8 @@
 
 # Competition submission packaging — builds and checks the archive that is
 # attached to the entry form. Not part of the analysis.
-/make_reference_zip.py
-/verify_reference_zip.py
+/src/make_reference_zip.py
+/src/verify_reference_zip.py
 
 # Working copies of the dev diary.
 # A curated, publication-safe snapshot is committed at docs/devlog/ instead.
